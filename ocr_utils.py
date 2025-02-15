@@ -105,6 +105,19 @@ def is_movie_ticket(text):
 
     return False
 
+def is_library_receipt(text):
+    """
+    추출된 텍스트가 도서관 대출증인지 판단
+    """
+    keywords = ["도서관", "대출", "반납", "도서","대출확인증"]
+
+    # 키워드 검사
+    for keyword in keywords:
+        if keyword in text:
+            return True
+
+    return False
+
 def is_writing_motivation(text):
     """
     추출된 텍스트가 "나는 잘하고 있어"인지 판단
