@@ -41,8 +41,8 @@ download_from_gdrive(best_pt_id, model_path)
 download_from_gdrive(best2_pt_id, mic_model_path)
 
 # ✅ YOLOv5 모델 로드 (torch.hub.load 사용)
-model = torch.hub.load("ultralytics/yolov5", "custom", path=model_path, force_reload=True)
-mic_model = torch.hub.load("ultralytics/yolov5", "custom", path=mic_model_path, force_reload=True)
+model = torch.hub.load("ultralytics/yolov5", "custom", path=model_path, force_reload=False)
+mic_model = torch.hub.load("ultralytics/yolov5", "custom", path=mic_model_path, force_reload=False)
 
 print("✅ 모델 로드 성공!")
 
