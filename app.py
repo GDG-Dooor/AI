@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import chatbot  # chatbot.py의 GPT 기능 사용
+import chatbot_db  # chatbot.py의 GPT 기능 사용
 import os
 from dotenv import load_dotenv
 
@@ -22,7 +22,7 @@ def chat():
             return jsonify({"error": "User input is required"}), 400
 
         # chatbot.py의 GPT 응답 생성 함수 호출
-        response = chatbot.get_gpt_response(user_id, user_input)
+        response = chatbot_db.get_gpt_response(user_id, user_input)
 
         return jsonify({"response": response})
 
