@@ -18,33 +18,18 @@ if os.name == "nt":
 # Flask 인스턴스 생성
 app = Flask(__name__)
 
-# Google Drive에서 YOLO 모델 파일 ID
-best_pt_id = "17tuBF-Rktb6f8PSAEq98swyaxO--dl9J" # `best.pt`의 파일 ID
-best2_pt_id = "1bQnF8hSOHZDNl0FVkRr4epLGKOCXTm6H"    # `best2.pt`의 파일 ID
+MODEL_PATH_1 = "best.pt"
+MODEL_PATH_2 = "best2.pt"
 
-# 다운로드할 경로 설정
-model_path = os.path.join(os.getcwd(), "best.pt")
-mic_model_path = os.path.join(os.getcwd(), "best2.pt")
+# ✅ 두 개의 모델이 모두 존재할 경우 로드
+if os.path.exists(MODEL_PATH_1) and os.path.exists(MODEL_PATH_2):
+    model_1 = torch.hub.load("ultralytics/yolov5", "custom", path=MODEL_PATH_1, force_reload=False)
+    model_2 = torch.hub.load("ultralytics/yolov5", "custom", path=MODEL_PATH_2, force_reload=False)
 
-# Google Drive에서 파일 다운로드 함수
-def download_from_gdrive(file_id, save_path):
-    if not os.path.exists(save_path):  # 파일이 없을 때만 다운로드
-        print(f"📥 {save_path} 다운로드 중...")
-        url = f"https://drive.google.com/uc?id={file_id}"
-        gdown.download(url, save_path, quiet=False)
-        print(f"✅ 다운로드 완료: {save_path}")
-    else:
-        print(f"✅ 이미 존재함: {save_path}")
-
-# 모델 다운로드 실행
-download_from_gdrive(best_pt_id, model_path)
-download_from_gdrive(best2_pt_id, mic_model_path)
-
-# ✅ YOLOv5 모델 로드 (torch.hub.load 사용)
-model = torch.hub.load("ultralytics/yolov5", "custom", path=model_path, force_reload=False)
-mic_model = torch.hub.load("ultralytics/yolov5", "custom", path=mic_model_path, force_reload=False)
-
-print("✅ 모델 로드 성공!")
+    print("✅ YOLOv5 모델 1 로드 성공!")
+    print("✅ YOLOv5 모델 2 로드 성공!")
+else:
+    print("❌ 모델 파일을 찾을 수 없습니다.")
 
 
 @app.route('/ocr', methods=['POST'])
@@ -209,7 +194,7 @@ def detect_paper():
     image = Image.open(io.BytesIO(image_file.read()))  # PIL 이미지 변환
 
     # YOLO 모델 실행
-    results = model(image)
+    results = model_1(image)
 
     # YOLO 결과 변환
     detections = results.pandas().xyxy[0].to_dict(orient="records")
@@ -236,7 +221,7 @@ def detect_microphone():
     image = Image.open(io.BytesIO(image_file.read()))  # PIL 이미지 변환
 
     # YOLO 모델 실행
-    results = mic_model(image)
+    results = model_2(image)
 
     # YOLO 결과 변환
     detections = results.pandas().xyxy[0].to_dict(orient="records")
