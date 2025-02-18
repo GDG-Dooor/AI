@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from yolov5 import YOLOv5
 import torch
 import base64
 import io
@@ -24,10 +25,10 @@ PORT = int(os.environ.get("PORT", 10000))  # 기본 포트 10000 사용
 MODEL_PATH_1 = "best.pt"
 MODEL_PATH_2 = "best2.pt"
 
-# ✅ GitHub에서 다운로드하지 않고, Render 내부에서 YOLO 모델을 로드하도록 강제 설정
+# ✅ GitHub 요청 없이, Render 내부에서 YOLO 모델 직접 로드
 if os.path.exists(MODEL_PATH_1) and os.path.exists(MODEL_PATH_2):
-    model_1 = torch.hub.load("ultralytics/yolov5", "custom", path=MODEL_PATH_1, force_reload=False, trust_repo=True)
-    model_2 = torch.hub.load("ultralytics/yolov5", "custom", path=MODEL_PATH_2, force_reload=False, trust_repo=True)
+    model_1 = YOLOv5(MODEL_PATH_1)
+    model_2 = YOLOv5(MODEL_PATH_2)
 
     print("✅ YOLOv5 모델 1 로드 성공!")
     print("✅ YOLOv5 모델 2 로드 성공!")
