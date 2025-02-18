@@ -198,7 +198,7 @@ def detect_paper():
     image = Image.open(io.BytesIO(image_file.read()))  # PIL 이미지 변환
 
     # YOLO 모델 실행
-    results = model_1(image)
+    results = model_1.predict(image)
 
     # YOLO 결과 변환
     detections = results.pandas().xyxy[0].to_dict(orient="records")
@@ -225,7 +225,7 @@ def detect_microphone():
     image = Image.open(io.BytesIO(image_file.read()))  # PIL 이미지 변환
 
     # YOLO 모델 실행
-    results = model_2(image)
+    results = model_2.predict(image)
 
     # YOLO 결과 변환
     detections = results.pandas().xyxy[0].to_dict(orient="records")
