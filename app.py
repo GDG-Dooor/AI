@@ -18,6 +18,9 @@ if os.name == "nt":
 # Flask 인스턴스 생성
 app = Flask(__name__)
 
+# Render에서 제공하는 환경 변수 `$PORT`를 사용
+PORT = int(os.environ.get("PORT", 10000))  # 기본 포트 10000 사용
+
 MODEL_PATH_1 = "best.pt"
 MODEL_PATH_2 = "best2.pt"
 
@@ -239,4 +242,4 @@ def detect_microphone():
     
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=PORT, debug=False)
