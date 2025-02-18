@@ -30,6 +30,10 @@ if os.path.exists(MODEL_PATH_1) and os.path.exists(MODEL_PATH_2):
     model_1 = YOLOv5(MODEL_PATH_1)
     model_2 = YOLOv5(MODEL_PATH_2)
 
+    # ✅ 모델을 CPU로 강제 설정 (메모리 절약)
+    model_1.model.to("cpu").half()
+    model_2.model.to("cpu").half()
+
     print("✅ YOLOv5 모델 1 로드 성공!")
     print("✅ YOLOv5 모델 2 로드 성공!")
 else:
