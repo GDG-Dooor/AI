@@ -19,6 +19,9 @@ if os.name == "nt":
 # Flask 인스턴스 생성
 app = Flask(__name__)
 
+# Render에서 제공하는 환경 변수 사용 (포트 자동 할당)
+PORT = int(os.environ.get("PORT", 10000))
+
 MODEL_PATH_1 = "paperbest.pt"
 MODEL_PATH_2 = "micbest.pt"
 
@@ -35,6 +38,11 @@ if os.path.exists(MODEL_PATH_1) and os.path.exists(MODEL_PATH_2):
     print("✅ YOLOv5 모델 2 로드 성공!")
 else:
     print("❌ 모델 파일을 찾을 수 없습니다.")
+
+# 간단한 테스트용 엔드포인트
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"message": "Flask 서버가 정상적으로 실행 중입니다!"})
 
 
 @app.route('/ocr', methods=['POST'])
@@ -243,6 +251,7 @@ def detect_microphone():
 
     
 
+# Flask 실행
 if __name__ == "__main__":
-    PORT = int(os.environ.get("PORT", 5000))  # ✅ 기본값을 5000으로 설정
-    app.run(host="0.0.0.0", port=PORT, debug=True)
+    print(f"✅ Flask 앱이 포트 {PORT}에서 실행됩니다.")
+    app.run(host="0.0.0.0", port=PORT)
