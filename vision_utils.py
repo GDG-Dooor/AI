@@ -1,6 +1,10 @@
 import requests
 import base64
 import os
+from dotenv import load_dotenv
+
+# .env 파일에서 환경 변수 로드
+load_dotenv()
 
 # Google Vision API 키 설정
 API_KEY = os.getenv("GOOGLE_API_KEY")

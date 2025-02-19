@@ -22,7 +22,6 @@ app = Flask(__name__)
 MODEL_PATH_1 = "paperbest.pt"
 MODEL_PATH_2 = "micbest.pt"
 
-# ✅ GitHub 요청 없이, Render 내부에서 YOLO 모델 직접 로드
 if os.path.exists(MODEL_PATH_1) and os.path.exists(MODEL_PATH_2):
     model_1 = YOLOv5(MODEL_PATH_1)
     model_2 = YOLOv5(MODEL_PATH_2)
@@ -204,7 +203,7 @@ def detect_paper():
     image = Image.open(io.BytesIO(image_file.read()))  # PIL 이미지 변환
 
     # YOLO 모델 실행
-    results = model_1(image)
+    results = model_1.model(image)
 
     # YOLO 결과 변환
     detections = results.pandas().xyxy[0].to_dict(orient="records")
@@ -231,7 +230,7 @@ def detect_microphone():
     image = Image.open(io.BytesIO(image_file.read()))  # PIL 이미지 변환
 
     # YOLO 모델 실행
-    results = model_2(image)
+    results = model_2.model(image)
 
     # YOLO 결과 변환
     detections = results.pandas().xyxy[0].to_dict(orient="records")
