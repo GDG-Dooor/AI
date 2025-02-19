@@ -22,8 +22,8 @@ app = Flask(__name__)
 # Render에서 제공하는 환경 변수 `$PORT`를 사용
 PORT = int(os.environ.get("PORT", 10000))  # 기본 포트 10000 사용
 
-MODEL_PATH_1 = "best.pt"
-MODEL_PATH_2 = "best2.pt"
+MODEL_PATH_1 = "paperbest.pt"
+MODEL_PATH_2 = "micbest.pt"
 
 # ✅ GitHub 요청 없이, Render 내부에서 YOLO 모델 직접 로드
 if os.path.exists(MODEL_PATH_1) and os.path.exists(MODEL_PATH_2):
