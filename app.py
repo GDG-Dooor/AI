@@ -19,9 +19,6 @@ if os.name == "nt":
 # Flask 인스턴스 생성
 app = Flask(__name__)
 
-# Render에서 제공하는 환경 변수 사용 (포트 자동 할당)
-PORT = int(os.environ.get("PORT", 10000))
-
 MODEL_PATH_1 = "paperbest.pt"
 MODEL_PATH_2 = "micbest.pt"
 
@@ -250,8 +247,5 @@ def detect_microphone():
     return jsonify({"microphone_detected": microphone_detected})
 
     
-
-# Flask 실행
 if __name__ == "__main__":
-    print(f"✅ Flask 앱이 포트 {PORT}에서 실행됩니다.")
-    app.run(host="0.0.0.0", port=PORT)
+    app.run(host="0.0.0.0", port=5000, debug=False)
