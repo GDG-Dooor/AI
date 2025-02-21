@@ -51,7 +51,7 @@ def save_memory(user_id, role, content):
         print(f"❌ Error saving data: {e}")
 
 # 최근 대화 불러오기 함수
-def get_recent_memory(user_id, limit=5):
+def get_recent_memory(user_id, limit=50):
     """최근 대화 내용을 가져옴"""
     try:
         conn = sqlite3.connect(DB_FILE)
