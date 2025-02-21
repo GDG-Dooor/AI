@@ -64,7 +64,7 @@ def chat():
 @app.route("/history/<user_id>", methods=["GET"])
 def get_history(user_id):
     try:
-        history = get_recent_memory(user_id, limit=20)  # 최근 20개 대화 불러오기
+        history = get_recent_memory(user_id, limit=50)  # 최근 50개 대화 불러오기
         return jsonify({"user_id": user_id, "history": history})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
