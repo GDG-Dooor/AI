@@ -34,25 +34,25 @@ def initialize_database():
     except Exception as e:
         print(f"❌ Database initialization error: {e}")
 
-# 대화 저장 함수 (순서 보장)
+# 대화 저장 함수
 def save_memory(user_id, user_input, bot_reply):
-    """사용자 입력과 챗봇 응답을 같은 트랜잭션 내에서 저장하여 순서를 보장"""
+    """사용자 입력과 챗봇 응답을 같은 트랜잭션 내에서 저장"""
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
-        
-        # 트랜잭션 시작 (BEGIN)
+
+        # 사용자 입력 저장
         cursor.execute('''
             INSERT INTO chat_memory (user_id, role, content)
             VALUES (?, ?, ?)
         ''', (user_id, "user", user_input))
 
+        # 챗봇 응답 저장
         cursor.execute('''
             INSERT INTO chat_memory (user_id, role, content)
             VALUES (?, ?, ?)
         ''', (user_id, "assistant", bot_reply))
 
-        # 트랜잭션 완료 (COMMIT)
         conn.commit()
         conn.close()
     except Exception as e:
@@ -67,7 +67,7 @@ def get_recent_memory(user_id, limit=50):
         cursor.execute('''
             SELECT role, content FROM chat_memory
             WHERE user_id = ?
-            ORDER BY timestamp ASC  -- 올바른 순서 보장
+            ORDER BY timestamp ASC
             LIMIT ?
         ''', (user_id, limit))
         rows = cursor.fetchall()
@@ -78,7 +78,7 @@ def get_recent_memory(user_id, limit=50):
         return []
 
 class ChatBot:
-    def __init__(self, bot_name="소셜 가이드"):
+    def __init__(self, bot_name="포이"):
         self.bot_name = bot_name
         self.retriever = initialize_retriever()
         self.llm = ChatOpenAI(model_name="gpt-4o", temperature=0.7)
@@ -89,16 +89,16 @@ class ChatBot:
         chat_history = get_recent_memory(user_id)
         chat_summary = "\n".join([f"{msg['role']}: {msg['content']}" for msg in chat_history])
 
+        # ✅ 올바르게 {user_id} 변수를 포함하는 프롬프트 설정
         prompt_template = ChatPromptTemplate.from_template("""
-        
         [역할 설정]
-        당신은 은둔형 외톨이의 사회화를 도와주는 친근한 친구같은 ai채팅봇입니다.
+        당신은 은둔형 외톨이의 사회화를 도와주는 친근한 AI 챗봇입니다.
         사용자가 은둔 생활에서 벗어나도록 정서적 지지와 실용적인 조언을 제공합니다.
-        공감을 잘해야 하며 용기와 격려를 해줘야 합니다.
-        당신의 이름은 "포이" 입니다. 꼭 기억하세요. 
+        공감을 잘해야 하며, 용기와 격려를 해줘야 합니다.
+        당신의 이름은 "포이"입니다. 꼭 기억하세요.
 
         [사용자 정보]
-        사용자의 이름은 "{{user_id}}" 입니다. 대화할 때 이 이름을 사용하세요.
+        사용자의 이름은 "{user_id}"입니다. 대화할 때 이 이름을 사용하세요.
 
         [사용자 질문]
         {query}
@@ -114,12 +114,13 @@ class ChatBot:
         2. 사용자가 부담을 느끼지 않도록 강요하지 않고, 용기를 주세요.
         3. 현실적인 조언을 하되, 강요하지 마세요.
         4. 답변은 되도록 50자 이내로 해주세요.
-    
 
         [최종 답변]
         """)
 
+        # ✅ 올바르게 user_id 포함하여 입력 데이터 구성
         input_data = {
+            "user_id": user_id,
             "query": user_input,
             "context_docs": "\n".join(related_docs),
             "chat_history": chat_summary,
@@ -128,7 +129,7 @@ class ChatBot:
         response_chain = prompt_template | self.llm | StrOutputParser()
         bot_reply = response_chain.invoke(input_data)
 
-        # ✅ 사용자의 입력과 챗봇의 응답을 한 번에 저장하여 순서 유지
+        # ✅ 사용자의 입력과 챗봇의 응답을 한 번에 저장
         save_memory(user_id, user_input, bot_reply)
 
         return bot_reply
@@ -138,7 +139,7 @@ if __name__ == "__main__":
     initialize_database()  # 데이터베이스 초기화
     chatbot = ChatBot()
 
-    user_id = "user_1234"
+    user_id = "미나"
     while True:
         user_input = input("👤 사용자: ")
         if user_input.lower() in ["exit", "quit"]:
@@ -146,6 +147,4 @@ if __name__ == "__main__":
             break
         bot_reply = chatbot.generate_response(user_id, user_input)
         print(f"🤖 포이: {bot_reply}")
-
-
 
