@@ -79,7 +79,7 @@ class ChatBot:
         self.retriever = initialize_retriever()
         self.llm = ChatOpenAI(model_name="gpt-4o", temperature=0.7)
 
-    def generate_response(self, user_id, user_input):
+    def generate_response(self, user_id, user_name, user_input):
         """이전 대화 기록을 반영하여 응답 생성"""
         related_docs = fetch_data(self.retriever, user_input)
         chat_history = get_recent_memory(user_id)
@@ -94,7 +94,7 @@ class ChatBot:
         당신의 이름은 "포이"입니다. 꼭 기억하세요.
 
         [사용자 정보]
-        사용자의 이름은 "{user_id}"입니다. 대화할 때 이 이름을 사용하세요.
+        사용자의 이름은 "{user_name}"입니다. 대화할 때 이 이름을 사용하세요.
 
         [사용자 질문]
         {query}
@@ -117,6 +117,7 @@ class ChatBot:
         # ✅ user_id 적용
         input_data = {
             "user_id": user_id,
+            "user_name" : user_name,
             "query": user_input,
             "context_docs": "\n".join(related_docs),
             "chat_history": chat_summary,
@@ -170,6 +171,12 @@ def get_chat_history(user_id: str):
 
 # 데이터베이스 초기화
 initialize_database()
+
+
+
+
+
+
 
 
 
