@@ -8,6 +8,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from utils import initialize_retriever, fetch_data
 
+
 # 환경 변수 로드
 load_dotenv()
 
