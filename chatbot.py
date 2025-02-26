@@ -84,7 +84,7 @@ class ChatBot:
         chat_history = get_recent_memory(user_id)
         chat_summary = "\n".join([f"{msg['role']}: {msg['content']}" for msg in chat_history])
 
-        # ✅ Postman에서 받은 user_id 값을 템플릿에 적용
+        # ✅ user_id 값을 템플릿에 적용
         prompt_template = ChatPromptTemplate.from_template("""
         [역할 설정]
         당신은 은둔형 외톨이의 사회화를 도와주는 친근한 AI 챗봇입니다.
@@ -113,7 +113,7 @@ class ChatBot:
         [최종 답변]
         """)
 
-        # ✅ Postman에서 받은 user_id 적용
+        # ✅ user_id 적용
         input_data = {
             "user_id": user_id,
             "query": user_input,
@@ -141,11 +141,11 @@ class ChatRequest(BaseModel):
 @app.post("/chat")
 def chat(request: ChatRequest):
     """
-    Postman에서 user_id와 user_input을 JSON 형식으로 보내면 챗봇이 응답을 생성하여 반환
+    user_id와 user_input을 JSON 형식으로 보내면 챗봇이 응답을 생성하여 반환.
     """
     try:
-        user_id = request.user_id  # ✅ Postman Body에서 받은 user_id
-        user_input = request.user_input  # ✅ Postman Body에서 받은 user_input
+        user_id = request.user_id
+        user_input = request.user_input
 
         bot_reply = chatbot.generate_response(user_id, user_input)
         return {"user_id": user_id, "bot_reply": bot_reply}
@@ -153,7 +153,22 @@ def chat(request: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"챗봇 처리 중 오류 발생: {str(e)}")
 
+# GET 요청: 사용자 채팅 기록 조회
+@app.get("/history")
+def get_chat_history(user_id: str):
+    """
+    user_id를 기반으로 최근 대화 기록을 조회하는 API.
+    `https://ai-iyjk.onrender.com/history?user_id=Dooor` 형태로 요청 가능.
+    """
+    try:
+        chat_history = get_recent_memory(user_id)
+        return {"user_id": user_id, "chat_history": chat_history}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"채팅 기록 조회 중 오류 발생: {str(e)}")
+
 # 데이터베이스 초기화
 initialize_database()
+
 
 
