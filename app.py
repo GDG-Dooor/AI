@@ -236,7 +236,7 @@ def detect_microphone():
     detections = results.pandas().xyxy[0].to_dict(orient="records")
 
     # 신뢰도(유사도) 기준 설정
-    confidence_threshold = 0.6
+    confidence_threshold = 0.4
     filtered_detections = [d for d in detections if d.get("confidence", 0) >= confidence_threshold]
 
     # 'paper' 라벨이 감지되었는지 확인 (신뢰도 조건을 만족하는 것만 확인)

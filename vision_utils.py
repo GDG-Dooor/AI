@@ -91,7 +91,7 @@ def mountain_image(image_content, confidence_threshold=0.8):
                 "label": label['description'],
                 "confidence": label['score']
             })
-            if label['description'].lower() in ["mountain", "hill", "rock", "peak", "ridge","nature reserve"] and label['score'] >= confidence_threshold:
+            if label['description'].lower() in ["mountain", "hill", "rock", "peak", "ridge","nature reserve", "mountainous landforms", "tree", "natural environment", "forest"] and label['score'] >= confidence_threshold:
                 is_mountain = True
 
         return {
