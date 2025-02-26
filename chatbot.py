@@ -1,13 +1,20 @@
-import os
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 import sqlite3
 from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+import os
+from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from utils import initialize_retriever, fetch_data
 
 # 환경 변수 로드
 load_dotenv()
+
+# FastAPI 앱 생성
+app = FastAPI()
+
+# OpenAI API 키
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # SQLite 데이터베이스 파일 경로
@@ -16,67 +23,55 @@ DB_FILE = os.path.join(os.getcwd(), "chat_memory.db")
 # 데이터베이스 초기화 함수
 def initialize_database():
     """데이터베이스 파일과 테이블을 초기화"""
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS chat_memory (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT NOT NULL,
-                role TEXT NOT NULL,
-                content TEXT NOT NULL,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        conn.commit()
-        conn.close()
-        print("✅ Database initialized successfully.")
-    except Exception as e:
-        print(f"❌ Database initialization error: {e}")
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS chat_memory (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            role TEXT NOT NULL,
+            content TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
 
 # 대화 저장 함수
 def save_memory(user_id, user_input, bot_reply):
     """사용자 입력과 챗봇 응답을 같은 트랜잭션 내에서 저장"""
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT INTO chat_memory (user_id, role, content)
+        VALUES (?, ?, ?)
+    ''', (user_id, "user", user_input))
 
-        # 사용자 입력 저장
-        cursor.execute('''
-            INSERT INTO chat_memory (user_id, role, content)
-            VALUES (?, ?, ?)
-        ''', (user_id, "user", user_input))
+    cursor.execute('''
+        INSERT INTO chat_memory (user_id, role, content)
+        VALUES (?, ?, ?)
+    ''', (user_id, "assistant", bot_reply))
 
-        # 챗봇 응답 저장
-        cursor.execute('''
-            INSERT INTO chat_memory (user_id, role, content)
-            VALUES (?, ?, ?)
-        ''', (user_id, "assistant", bot_reply))
-
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print(f"❌ Error saving data: {e}")
+    conn.commit()
+    conn.close()
 
 # 최근 대화 불러오기 함수
 def get_recent_memory(user_id, limit=50):
     """최근 대화 내용을 가져옴"""
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT role, content FROM chat_memory
-            WHERE user_id = ?
-            ORDER BY timestamp ASC
-            LIMIT ?
-        ''', (user_id, limit))
-        rows = cursor.fetchall()
-        conn.close()
-        return [{"role": row[0], "content": row[1]} for row in rows]
-    except Exception as e:
-        print(f"❌ Error retrieving data: {e}")
-        return []
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT role, content FROM chat_memory
+        WHERE user_id = ?
+        ORDER BY timestamp ASC
+        LIMIT ?
+    ''', (user_id, limit))
+    rows = cursor.fetchall()
+    conn.close()
+    return [{"role": row[0], "content": row[1]} for row in rows]
 
+# 챗봇 클래스
 class ChatBot:
     def __init__(self, bot_name="포이"):
         self.bot_name = bot_name
@@ -89,7 +84,7 @@ class ChatBot:
         chat_history = get_recent_memory(user_id)
         chat_summary = "\n".join([f"{msg['role']}: {msg['content']}" for msg in chat_history])
 
-        # ✅ 올바르게 {user_id} 변수를 포함하는 프롬프트 설정
+        # ✅ Postman에서 받은 user_id 값을 템플릿에 적용
         prompt_template = ChatPromptTemplate.from_template("""
         [역할 설정]
         당신은 은둔형 외톨이의 사회화를 도와주는 친근한 AI 챗봇입니다.
@@ -118,7 +113,7 @@ class ChatBot:
         [최종 답변]
         """)
 
-        # ✅ 올바르게 user_id 포함하여 입력 데이터 구성
+        # ✅ Postman에서 받은 user_id 적용
         input_data = {
             "user_id": user_id,
             "query": user_input,
@@ -129,22 +124,36 @@ class ChatBot:
         response_chain = prompt_template | self.llm | StrOutputParser()
         bot_reply = response_chain.invoke(input_data)
 
-        # ✅ 사용자의 입력과 챗봇의 응답을 한 번에 저장
+        # ✅ 대화 기록 저장
         save_memory(user_id, user_input, bot_reply)
 
         return bot_reply
 
-# 실행 예제
-if __name__ == "__main__":
-    initialize_database()  # 데이터베이스 초기화
-    chatbot = ChatBot()
+# 챗봇 인스턴스 생성
+chatbot = ChatBot()
 
-    user_id = "미나"
-    while True:
-        user_input = input("👤 사용자: ")
-        if user_input.lower() in ["exit", "quit"]:
-            print("👋 챗봇 종료!")
-            break
+# API 요청 데이터 모델
+class ChatRequest(BaseModel):
+    user_id: str
+    user_input: str
+
+# POST 요청: 챗봇 응답 생성
+@app.post("/chat")
+def chat(request: ChatRequest):
+    """
+    Postman에서 user_id와 user_input을 JSON 형식으로 보내면 챗봇이 응답을 생성하여 반환
+    """
+    try:
+        user_id = request.user_id  # ✅ Postman Body에서 받은 user_id
+        user_input = request.user_input  # ✅ Postman Body에서 받은 user_input
+
         bot_reply = chatbot.generate_response(user_id, user_input)
-        print(f"🤖 포이: {bot_reply}")
+        return {"user_id": user_id, "bot_reply": bot_reply}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"챗봇 처리 중 오류 발생: {str(e)}")
+
+# 데이터베이스 초기화
+initialize_database()
+
 
