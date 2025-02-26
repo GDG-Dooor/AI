@@ -45,13 +45,14 @@ def chat():
     try:
         data = request.json
         user_id = data.get("user_id", "default_user")
+        user_name = data.get("user_name")
         user_input = data.get("message")
 
         if not user_input:
             return jsonify({"error": "User input is required"}), 400
 
         # 챗봇 응답 생성 (이전 대화 기록 포함)
-        bot_response = chatbot.generate_response(user_id, user_input)
+        bot_response = chatbot.generate_response(user_id, user_name, user_input)
 
         return jsonify({
             "poi": bot_response
@@ -64,7 +65,7 @@ def chat():
 @app.route("/history/<user_id>", methods=["GET"])
 def get_history(user_id):
     try:
-        history = get_recent_memory(user_id, limit=50)  # 최근 50개 대화 불러오기
+        history = get_recent_memory(user_id, limit=50)  # 최근 20개 대화 불러오기
         return jsonify({"user_id": user_id, "history": history})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
